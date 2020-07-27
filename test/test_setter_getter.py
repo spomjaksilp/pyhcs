@@ -4,8 +4,8 @@ import numpy as np
 from hcs import HCS3202
 
 PORT = "/dev/ttyUSB0"
-VOLTAGES = np.linspace(0, 10, 5)
-CURRENTS = np.linspace(0, 2, 5)
+VOLTAGES = np.linspace(1, 10, 2)
+CURRENTS = np.linspace(0.1, 2, 2)
 
 
 class TestSetter:
@@ -27,10 +27,10 @@ class TestSetter:
 
     def test_set_over(self):
         # assemble
-        with HCS3202(PORT) as device:
+        with HCS3202(PORT, max_voltage=1) as device:
             # act & assert
             with pytest.raises(AssertionError, match=r"^Invalid.*"):
-                result = device.set_voltage(1e4)
+                result = device.set_voltage(90)
 
     @pytest.mark.parametrize("current", CURRENTS)
     def test_set_current(self, current):
@@ -50,10 +50,10 @@ class TestSetter:
 
     def test_set_over(self):
         # assemble
-        with HCS3202(PORT) as device:
+        with HCS3202(PORT, max_current=1) as device:
             # act & assert
             with pytest.raises(AssertionError, match=r"^Invalid.*"):
-                result = device.set_current(1e4)
+                result = device.set_current(90)
 
 
 class TestGetter:
@@ -61,14 +61,7 @@ class TestGetter:
         # assemble
         with HCS3202(PORT) as device:
             # act
-            voltage, current, cv = device.get_preset()
-        # assert no error occurs
-
-    def test_get_preset(self):
-        # assemble
-        with HCS3202(PORT) as device:
-            # act
-            voltage, current, cv = device.get_preset()
+            voltage, current = device.get_preset()
         # assert no error occurs
 
     def test_get_display(self):
@@ -95,7 +88,7 @@ class TestSetGet:
         with HCS3202(PORT) as device:
             # act
             target_current = 0.5
-            result = device.set_voltage(target_current)
-            voltage, current, cv = device.get_preset()
+            result = device.set_current(target_current)
+            voltage, current = device.get_preset()
         # assert
         assert current == target_current
