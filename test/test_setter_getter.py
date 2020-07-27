@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from hcs import HCS3202, RangeError
+from hcs import HCS3202
 
 PORT = "/dev/ttyUSB0"
 VOLTAGES = np.linspace(0, 10, 5)
@@ -22,14 +22,14 @@ class TestSetter:
         # assemble
         with HCS3202(PORT) as device:
             # act & assert
-            with pytest.raises(RangeError, match=r"^Negative.*"):
+            with pytest.raises(AssertionError, match=r"^Negative.*"):
                 result = device.set_voltage(-1)
 
     def test_set_over(self):
         # assemble
         with HCS3202(PORT) as device:
             # act & assert
-            with pytest.raises(RangeError, match=r"^Over.*"):
+            with pytest.raises(AssertionError, match=r"^Invalid.*"):
                 result = device.set_voltage(1e4)
 
     @pytest.mark.parametrize("current", CURRENTS)
@@ -45,14 +45,14 @@ class TestSetter:
         # assemble
         with HCS3202(PORT) as device:
             # act & assert
-            with pytest.raises(RangeError, match=r"^Negative.*"):
+            with pytest.raises(AssertionError, match=r"^Negative.*"):
                 result = device.set_current(-1)
 
     def test_set_over(self):
         # assemble
         with HCS3202(PORT) as device:
             # act & assert
-            with pytest.raises(RangeError, match=r"^Over.*"):
+            with pytest.raises(AssertionError, match=r"^Invalid.*"):
                 result = device.set_current(1e4)
 
 
