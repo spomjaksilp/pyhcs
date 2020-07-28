@@ -32,14 +32,18 @@ class HCS:
     def __init__(self, port="/dev/ttyUSB0", limit_voltage=None, limit_current=None):
         logging.info("Connecting to serial device at {}".format(port))
         self.port = port
-        logging.info("Configuration soft-limits to {}V and {}A".format(limit_voltage, limit_current))
         self.limit_voltage = limit_voltage
         self.limit_current = limit_current
         self.serial = serial.Serial(port=self.port, baudrate=9600, timeout=0.5)
         self.max_voltage, self.max_current = self.get_max()
         logging.info("Max ratings for {}: {}V and {}A".format(self.port, self.max_voltage, self.max_current))
-        assert self.limit_voltage is None or self.limit_voltage <= self.max_voltage, "Voltage limit > device maximum"
-        assert self.limit_current is None or self.limit_current <= self.max_voltage, "Current limit > device maximum"
+        if self.limit_voltage is None:
+            self.limit_voltage = self.max_voltage
+        if self.limit_current is None:
+            self.limit_current = self.max_current
+        logging.info("Configuration soft-limits to {}V and {}A".format(limit_voltage, limit_current))
+        assert self.limit_voltage <= self.max_voltage, "Voltage limit > device maximum"
+        assert self.limit_current <= self.max_voltage, "Current limit > device maximum"
 
     def __enter__(self):
         return self
@@ -170,8 +174,8 @@ class HCS:
         :param voltage: (float)
         :return:
         """
-        assert self.max_voltage is None or voltage <= self.max_voltage,\
-            "Invalid range! {}V is larger than soft limit of {}V".format(voltage, self.max_voltage)
+        assert voltage <= self.max_voltage,\
+            "Invalid range! {}V > limit of {}V".format(voltage, self.max_voltage)
         assert voltage > 0, "Negative voltage given"
         if voltage < self.min_voltage:
             logging.warning("Given voltage {}V < {}V minimum, setting to minimum voltage".format(voltage,
@@ -188,8 +192,8 @@ class HCS:
         :param current: (float)
         :return:
         """
-        assert self.max_current is None or current <= self.max_current,\
-            "Invalid range! {}A is larger than soft limit of {}A".format(current, self.max_current)
+        assert current <= self.max_current,\
+            "Invalid range! {}A > limit of {}A".format(current, self.max_current)
         assert current > 0, "Negative current given"
         if current < self.min_current:
             logging.warning("Given current {}A < {}A minimum, setting to minimum current".format(current,
