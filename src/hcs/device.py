@@ -42,20 +42,31 @@ class HCS:
         :param cmd: (bytes) command to send. e.g. b"GETS"
         :return: (bytes) response
         """
-        print(cmd)
         self.serial.write(cmd + self.CR)
-        return self._read()
 
     def _read(self):
         """
-        :return: result
+        :return: (bytes) result
         """
         result = self.serial.read_until(self.ACK + self.CR)
         # command not accepted
         if result == b"":
-            raise Exception("Command failed")
+            return False, b""
         else:
-            return result.rstrip(self.ACK + self.CR)
+            return True, result.rstrip(self.ACK + self.CR)
+
+    def _execute(self, cmd):
+        """
+        Executes a given command and evaluates the result
+        :param cmd: (bytes) command to send. e.g. b"GETS"
+        :return: (bytes) result
+        """
+        self._write(cmd)
+        success, answer = self._read()
+        if success:
+            return answer
+        else:
+            raise Exception("Command {} did not receive ACK".format(cmd.decode()))
 
     @staticmethod
     def _parse_result(result, decimals):
@@ -77,7 +88,7 @@ class HCS:
         :return:
         """
         value = b"1" if on else b"0"
-        self._write(b"SOUT" + value)
+        self._execute(b"SOUT" + value)
         return True
 
     def enable(self):
@@ -97,7 +108,7 @@ class HCS:
         Gets the preset voltage/current values
         :return: (tuple) voltage, current
         """
-        result = self._write(b"GETS")
+        result = self._execute(b"GETS")
         return self._parse_result(result, self.SET_DECIMALS)
 
     def get_display(self):
@@ -105,7 +116,7 @@ class HCS:
         Gets the preset voltage/current values and wether supply is in CC mode (else it is CV)
         :return: (tuple) voltage, current, cc
         """
-        result = self._write(b"GETD")
+        result = self._execute(b"GETD")
         cc = True if result[-1] == b"1" else False
         return *self._parse_result(result, self.DISPLAY_DECIMALS_I), cc
 
@@ -120,7 +131,7 @@ class HCS:
         assert voltage >= 0.8, "Negative or voltage <= 0.8 given"
         voltage_bytes = "{:0{}d}".format(round(voltage * 10**self.SET_DECIMALS["U"]),
                                          self.SET_DECIMALS["U"] + 2).encode()
-        self._write(b"VOLT" + voltage_bytes)
+        self._execute(b"VOLT" + voltage_bytes)
         return True
 
     def set_current(self, current):
@@ -134,7 +145,7 @@ class HCS:
         assert current >= 0.1, "Negative or zero current given"
         current_bytes = "{:0{}d}".format(round(current * 10 ** self.SET_DECIMALS["I"]),
                                          self.SET_DECIMALS["I"] + 2).encode()
-        self._write(b"CURR" + current_bytes)
+        self._execute(b"CURR" + current_bytes)
         return True
 
 
