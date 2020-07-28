@@ -175,7 +175,7 @@ class HCS:
         assert voltage > 0, "Negative voltage given"
         if voltage < self.min_voltage:
             logging.warning("Given voltage {}V < {}V minimum, setting to minimum voltage".format(voltage,
-                                                                                              self.min_voltage))
+                                                                                                 self.min_voltage))
             voltage = self.min_voltage
         voltage_bytes = "{:0{}d}".format(round(voltage * 10**self.SET_DECIMALS["U"]),
                                          self.SET_DECIMALS["U"] + 2).encode()
