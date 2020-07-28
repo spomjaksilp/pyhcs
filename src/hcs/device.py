@@ -5,8 +5,6 @@
 import numpy as np
 import serial
 
-from .helper import raise_for_result
-
 
 class HCS:
     """
