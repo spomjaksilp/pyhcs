@@ -174,8 +174,8 @@ class HCS:
         :param voltage: (float)
         :return:
         """
-        assert voltage <= self.max_voltage,\
-            "Invalid range! {}V > limit of {}V".format(voltage, self.max_voltage)
+        assert voltage <= self.limit_voltage,\
+            "Invalid range! {}V > limit of {}V".format(voltage, self.limit_voltage)
         assert voltage > 0, "Negative voltage given"
         if voltage < self.min_voltage:
             logging.warning("Given voltage {}V < {}V minimum, setting to minimum voltage".format(voltage,
@@ -192,8 +192,8 @@ class HCS:
         :param current: (float)
         :return:
         """
-        assert current <= self.max_current,\
-            "Invalid range! {}A > limit of {}A".format(current, self.max_current)
+        assert current <= self.limit_current,\
+            "Invalid range! {}A > limit of {}A".format(current, self.limit_current)
         assert current > 0, "Negative current given"
         if current < self.min_current:
             logging.warning("Given current {}A < {}A minimum, setting to minimum current".format(current,
