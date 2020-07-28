@@ -1,6 +1,7 @@
 """
 
 """
+import logging
 
 import numpy as np
 import serial
@@ -24,7 +25,9 @@ class HCS:
     }
 
     def __init__(self, port="/dev/ttyUSB0", max_voltage=None, max_current=None):
+        logging.info("Connecting to serial device at {}".format(port))
         self.port = port
+        logging.info("Configuration soft-limits to {}V and {}A".format(max_voltage, max_current))
         self.max_voltage = max_voltage
         self.max_current = max_current
         self.serial = serial.Serial(port=self.port, baudrate=9600, timeout=0.5)
@@ -34,6 +37,7 @@ class HCS:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        logging.info("Terminating serial connection to {}".format(self.port))
         self.serial.__exit__()
 
     def _write(self, cmd):
@@ -42,6 +46,7 @@ class HCS:
         :param cmd: (bytes) command to send. e.g. b"GETS"
         :return: (bytes) response
         """
+        logging.debug("Writing {}".format(cmd + self.CR))
         self.serial.write(cmd + self.CR)
 
     def _read(self):
@@ -49,6 +54,7 @@ class HCS:
         :return: (bytes) result
         """
         result = self.serial.read_until(self.ACK + self.CR)
+        logging.debug("Received answer {}".format(result))
         # command not accepted
         if result == b"":
             return False, b""
