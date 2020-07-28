@@ -29,13 +29,19 @@ class HCS:
         "I": None,
     }
 
-    def __init__(self, port="/dev/ttyUSB0", limit_voltage=None, limit_current=None):
+    def __init__(self, port="/dev/ttyUSB0", limit_voltage=None, limit_current=None, blind=False):
+        """
+        :param port: (str) serial port
+        :param limit_voltage: (float) voltage soft-limit
+        :param limit_current: (float) current soft-limit
+        :param blind: (bool) switch to skip device detection
+        """
         logging.info("Connecting to serial device at {}".format(port))
         self.port = port
         self.limit_voltage = limit_voltage
         self.limit_current = limit_current
         self.serial = serial.Serial(port=self.port, baudrate=9600, timeout=0.5)
-        self.max_voltage, self.max_current = self.get_max()
+        self.max_voltage, self.max_current = self.get_max() if not blind else (1e3, 1e3)
         logging.info("Max ratings for {}: {}V and {}A".format(self.port, self.max_voltage, self.max_current))
         if self.limit_voltage is None:
             self.limit_voltage = self.max_voltage
