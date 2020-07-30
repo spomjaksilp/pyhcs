@@ -171,7 +171,7 @@ class HCS:
         :return: (tuple) voltage, current, cc
         """
         result = self._execute(b"GETD")
-        cc = True if result[-1] == b"1" else False
+        cc = True if result[-1:] == b"1" else False
         return *self._parse_result(result[:-1], self.DISPLAY_DECIMALS), cc
 
     def set_voltage(self, voltage):
