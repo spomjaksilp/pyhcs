@@ -141,7 +141,7 @@ class HCS:
         :param on: (bool)
         :return:
         """
-        value = b"1" if on else b"0"
+        pvalue = b"0" if on else b"1"
         self._execute(b"SOUT" + value)
         return True
 
