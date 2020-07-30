@@ -29,25 +29,28 @@ class HCS:
         "I": None,
     }
 
-    def __init__(self, port="/dev/ttyUSB0", limit_voltage=None, limit_current=None, blind=False):
+    def __init__(self, port="/dev/ttyUSB0", limit_voltage=None, limit_current=None, blind=False,
+                 logger=logging.getLogger(__name__)):
         """
         :param port: (str) serial port
         :param limit_voltage: (float) voltage soft-limit
         :param limit_current: (float) current soft-limit
         :param blind: (bool) switch to skip device detection
+        :param logger: (logging.Logger) python logger instance
         """
-        logging.info("Connecting to serial device at {}".format(port))
+        self.logger = logger
+        self.logger.info("Connecting to serial device at {}".format(port))
         self.port = port
         self.limit_voltage = limit_voltage
         self.limit_current = limit_current
         self.serial = serial.Serial(port=self.port, baudrate=9600, timeout=0.5)
         self.max_voltage, self.max_current = self.get_max() if not blind else (1e3, 1e3)
-        logging.info("Max ratings for {}: {}V and {}A".format(self.port, self.max_voltage, self.max_current))
+        self.logger.info("Max ratings for {}: {}V and {}A".format(self.port, self.max_voltage, self.max_current))
         if self.limit_voltage is None:
             self.limit_voltage = self.max_voltage
         if self.limit_current is None:
             self.limit_current = self.max_current
-        logging.info("Configuration soft-limits to {}V and {}A".format(limit_voltage, limit_current))
+        self.logger.info("Configuration soft-limits to {}V and {}A".format(limit_voltage, limit_current))
         assert self.limit_voltage <= self.max_voltage, "Voltage limit > device maximum"
         assert self.limit_current <= self.max_voltage, "Current limit > device maximum"
 
@@ -55,7 +58,7 @@ class HCS:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        logging.info("Terminating serial connection to {}".format(self.port))
+        self.logger.info("Terminating serial connection to {}".format(self.port))
         self.serial.__exit__()
 
     @property
@@ -86,7 +89,7 @@ class HCS:
         :param cmd: (bytes) command to send. e.g. b"GETS"
         :return: (bytes) response
         """
-        logging.debug("Writing {}".format(cmd + self.CR))
+        self.logger.debug("Writing {}".format(cmd + self.CR))
         self.serial.write(cmd + self.CR)
 
     def _read(self):
@@ -94,7 +97,7 @@ class HCS:
         :return: (bytes) result
         """
         result = self.serial.read_until(self.ACK + self.CR)
-        logging.debug("Received answer {}".format(result))
+        self.logger.debug("Received answer {}".format(result))
         # command not accepted
         if result == b"":
             return False, b""
@@ -141,7 +144,7 @@ class HCS:
         :param on: (bool)
         :return:
         """
-        pvalue = b"0" if on else b"1"
+        value = b"0" if on else b"1"
         self._execute(b"SOUT" + value)
         return True
 
@@ -184,7 +187,7 @@ class HCS:
             "Invalid range! {}V > limit of {}V".format(voltage, self.limit_voltage)
         assert voltage > 0, "Negative voltage given"
         if voltage < self.min_voltage:
-            logging.warning("Given voltage {}V < {}V minimum, setting to minimum voltage".format(voltage,
+            self.logger.warning("Given voltage {}V < {}V minimum, setting to minimum voltage".format(voltage,
                                                                                                  self.min_voltage))
             voltage = self.min_voltage
         voltage_bytes = "{:0{}d}".format(round(voltage * 10**self.SET_DECIMALS["U"]),
@@ -202,7 +205,7 @@ class HCS:
             "Invalid range! {}A > limit of {}A".format(current, self.limit_current)
         assert current > 0, "Negative current given"
         if current < self.min_current:
-            logging.warning("Given current {}A < {}A minimum, setting to minimum current".format(current,
+            self.logger.warning("Given current {}A < {}A minimum, setting to minimum current".format(current,
                                                                                                  self.min_current))
             current = self.min_current
         current_bytes = "{:0{}d}".format(round(current * 10 ** self.SET_DECIMALS["I"]),
