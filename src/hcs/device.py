@@ -19,7 +19,7 @@ class HCS:
         "I": None
     }
 
-    DISPLAY_DECIMALS_I = {
+    DISPLAY_DECIMALS = {
         "U": None,
         "I": None
     }
@@ -132,7 +132,7 @@ class HCS:
         if decimals["U"] is None or decimals["I"] is None:
             raise NotImplementedError
         voltage = float(result[0:(2 + decimals["U"])]) / 10 ** decimals["U"]
-        current = float(result[(2 + decimals["U"]):]) / 10 ** decimals["I"]
+        current = float(result[(2 + decimals["I"]):]) / 10 ** decimals["I"]
         return voltage, current
 
     def set_output(self, on):
@@ -172,7 +172,7 @@ class HCS:
         """
         result = self._execute(b"GETD")
         cc = True if result[-1] == b"1" else False
-        return *self._parse_result(result[::-1], self.DISPLAY_DECIMALS_I), cc
+        return *self._parse_result(result[::-1], self.DISPLAY_DECIMALS), cc
 
     def set_voltage(self, voltage):
         """
@@ -217,7 +217,7 @@ class HCS3202(HCS):
         "I": 1
     }
 
-    DISPLAY_DECIMALS_I = {
+    DISPLAY_DECIMALS = {
         "U": 2,
         "I": 2
     }
