@@ -172,7 +172,7 @@ class HCS:
         """
         result = self._execute(b"GETD")
         cc = True if result[-1] == b"1" else False
-        return *self._parse_result(result, self.DISPLAY_DECIMALS_I), cc
+        return *self._parse_result(result[::-1], self.DISPLAY_DECIMALS_I), cc
 
     def set_voltage(self, voltage):
         """
